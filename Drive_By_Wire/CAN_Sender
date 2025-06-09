@@ -1,0 +1,45 @@
+
+#include <due_can.h>
+
+
+void setup() {
+    Serial.begin(115200);
+Serial.println("Serial test OK");
+    // Initialize CAN0 at 500 kbps (adjust if needed)
+    if (!Can0.begin(CAN_BPS_500K)) {
+        Serial.println("CAN init failed");
+        while (1);  // halt if CAN init fails
+    }
+    // (Optional) configure acceptance filters here, or allow all messages:
+    Can0.watchFor();
+    Serial.println("CAN initialized");
+}
+
+
+void loop() {
+    CAN_FRAME msg;
+    // Prepare a CAN frame with 11-bit ID 0x123 and 4 bytes of data
+    msg.id = 0x123;
+    msg.extended = false;        // standard frame (11-bit ID)
+    msg.length = 4;              // data length (0-8)
+    msg.data.byte[0] = 0xAB;     // example data
+    msg.data.byte[1] = 0xCD;
+    msg.data.byte[2] = 0xEF;
+    msg.data.byte[3] = 0x01;
+   
+    // Send the frame
+    if (Can0.sendFrame(msg) == 0) {
+        Serial.println("Send failed");
+    } else {
+        Serial.print("Sent ID=0x");
+        Serial.print(msg.id, HEX);
+        Serial.print(" Data=");
+        for (int i = 0; i < msg.length; i++) {
+            Serial.print("0x");
+            Serial.print(msg.data.byte[i], HEX);
+            Serial.print(" ");
+        }
+        Serial.println();
+    }
+    delay(1000);  // send once per second
+}
